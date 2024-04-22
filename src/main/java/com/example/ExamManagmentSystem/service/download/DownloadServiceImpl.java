@@ -8,6 +8,7 @@ import com.example.ExamManagmentSystem.dto.RegionTicketDto;
 import com.example.ExamManagmentSystem.service.auth.jwt.JsonWebTokenService;
 import com.example.ExamManagmentSystem.service.ticket.TicketService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.PageRequest;
@@ -28,22 +29,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class DownloadServiceImpl implements DownloadService {
 
     private final TicketRepository ticketRepository;
     private final RegionRepository regionRepository;
     private final TicketService ticketService;
     private final JsonWebTokenService jsonWebTokenService;
-    @Autowired
-    public DownloadServiceImpl(TicketRepository ticketRepository, RegionRepository regionRepository, TicketService ticketService, JsonWebTokenService jsonWebTokenService) {
-        this.ticketRepository = ticketRepository;
-        this.regionRepository = regionRepository;
-        this.ticketService = ticketService;
-        this.jsonWebTokenService = jsonWebTokenService;
-    }
 
     @Override
-    public ResponseEntity<InputStreamResource> downloadRegionTicketsAsCSV(HttpServletRequest request) {
+    public InputStreamResource downloadRegionTicketsAsCSV(HttpServletRequest request) {
         Long regionId = jsonWebTokenService.getUserIdFromToken(request,"tokenR");
         Region existingRegion = regionRepository.findById(regionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no region with this id:" + regionId));
@@ -85,13 +80,7 @@ public class DownloadServiceImpl implements DownloadService {
             writer.flush();
 
             // Return the CSV content as InputStreamResource
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=region_tickets.csv");
-            return ResponseEntity
-                    .ok()
-                    .headers(headers)
-                    .contentType(MediaType.parseMediaType("application/csv"))
-                    .body(new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray())));
+            return new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray()));
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create CSV file", e);
         }

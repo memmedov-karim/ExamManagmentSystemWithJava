@@ -7,6 +7,7 @@ import com.example.ExamManagmentSystem.service.auth.jwt.JsonWebTokenService;
 import com.example.ExamManagmentSystem.service.region.RegionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +16,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Objects;
 @Service
+@RequiredArgsConstructor
 public class RegionAuthServiceImpl implements RegionAuthService {
     private final RegionRepository regionRepository;
     private final JsonWebTokenService jsonWebTokenService;
-    public RegionAuthServiceImpl(RegionRepository regionRepository, JsonWebTokenService jsonWebTokenService) {
-        this.regionRepository = regionRepository;
-        this.jsonWebTokenService = jsonWebTokenService;
-    }
 
     @Override
-    public ResponseEntity<String> loginRegion(RegionLoginDto regionLoginDto, HttpServletResponse response){
+    public String loginRegion(RegionLoginDto regionLoginDto, HttpServletResponse response){
         String username = regionLoginDto.getUsername();
         String password = regionLoginDto.getPassword();
         if(username==null || username.isEmpty() || password==null || password.isEmpty()){
@@ -39,14 +37,14 @@ public class RegionAuthServiceImpl implements RegionAuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Password is not correct");
         }
 
-        HttpHeaders headers = jsonWebTokenService.sendTokenWithCookie(exsistingRegion.getId(),"tokenR",response);
+        jsonWebTokenService.sendTokenWithCookie(exsistingRegion.getId(),"tokenR",response);
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).headers(headers).body("Succesfull login");
+        return "Succesfull login";
 
     }
 
     @Override
-    public ResponseEntity<String> logoutRegion(HttpServletRequest request,HttpServletResponse response){
+    public String logoutRegion(HttpServletRequest request,HttpServletResponse response){
         return jsonWebTokenService.clearCookie(request,response,"tokenR");
     }
 }

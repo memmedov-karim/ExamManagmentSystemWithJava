@@ -1,59 +1,69 @@
 package com.example.ExamManagmentSystem.service.user;
 
+import com.example.ExamManagmentSystem.dto.UserRegisterDto;
 import com.example.ExamManagmentSystem.entity.User;
 import com.example.ExamManagmentSystem.repository.UserRepository;
+import com.example.ExamManagmentSystem.validator.DtoValidator;
 import com.example.ExamManagmentSystem.validator.UserValidator;
+import jakarta.validation.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
     private final UserValidator userValidator;
-
-    public UserServiceImpl(UserRepository userRepository, UserValidator userValidator) {
-        this.userRepository = userRepository;
-        this.userValidator = userValidator;
-    }
+    private final DtoValidator dtoValidator;
 
     @Override
-    public ResponseEntity<User> saveUser(User newUser){
-        userValidator.validate(newUser);
-        if(userRepository.existsUserByEmail(newUser.getEmail())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"User already exsist with this email: "+newUser.getEmail());
+    public User saveUser(@Valid @NotNull UserRegisterDto newUser) {
+        dtoValidator.validateDto(newUser);
+        if (userRepository.existsUserByEmail(newUser.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User already exists with this email: " + newUser.getEmail());
         }
-        User savedUser = userRepository.save(newUser);
-        return  ResponseEntity.status(HttpStatus.ACCEPTED).body(savedUser);
+        User nuser = new User();
+        nuser.setName(newUser.getName());
+        nuser.setEmail(newUser.getEmail());
+        nuser.setPassword(newUser.getPassword());
+        User savedUser = userRepository.save(nuser);
+        return savedUser;
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public String handleValidationExceptions(MethodArgumentNotValidException ex) {
+        return Objects.requireNonNull(ex.getBindingResult().getFieldError()).getDefaultMessage();
+    }
+    @Override
+    public List<User> allUser(){
+        return userRepository.findAll();
     }
 
     @Override
-    public ResponseEntity<List<User>> allUser(){
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(userRepository.findAll());
-    }
-
-    @Override
-    public ResponseEntity<Long> deleteUser(Long id){
+    public Long deleteUser(Long id){
         if(!userRepository.existsById(id)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"There is not user with this id: "+id);
         }
         userRepository.deleteById(id);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(id);
+        return id;
     }
 
     @Override
-    public ResponseEntity<User> updateUser(Long id,User newUser){
+    public User updateUser(Long id,User newUser){
         User exsistingUser = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no user with this id: " + id));
 
-        userValidator.validate(newUser);
+//        userValidator.validate(newUser);
         if(!exsistingUser.getName().equals(newUser.getName())){
             if(userRepository.existsUserByName(newUser.getName())){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"User already exsist with this name: "+newUser.getName());
@@ -62,7 +72,7 @@ public class UserServiceImpl implements UserService {
         exsistingUser.setName((newUser.getName()==null || newUser.getName().isEmpty()) ? exsistingUser.getName():newUser.getName());
         exsistingUser.setPassword((newUser.getPassword()==null || newUser.getPassword().isEmpty()) ? exsistingUser.getPassword():newUser.getPassword());
         User savedUser = userRepository.save(exsistingUser);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(savedUser);
+        return savedUser;
 
     }
 }

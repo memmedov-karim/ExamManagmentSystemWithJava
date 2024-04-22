@@ -5,7 +5,9 @@ import com.example.ExamManagmentSystem.utils.UtisGenerator;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
@@ -43,5 +45,4 @@ public class Ticket {
     private String place;
     private String phone;
     private String utis;
-
 }

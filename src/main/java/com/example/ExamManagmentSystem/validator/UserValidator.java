@@ -1,5 +1,6 @@
 package com.example.ExamManagmentSystem.validator;
 
+import com.example.ExamManagmentSystem.dto.UserRegisterDto;
 import com.example.ExamManagmentSystem.entity.User;
 import com.example.ExamManagmentSystem.repository.UserRepository;
 import org.hibernate.annotations.Comment;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 @Component
 public class UserValidator {
-    public void validate(User user){
+    public void validate(UserRegisterDto user){
         if(user.getName()==null || user.getName().isEmpty() || user.getPassword()==null || user.getPassword().isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"name,role and password is required.");
         }

@@ -1,17 +1,22 @@
 package com.example.ExamManagmentSystem.service.ticket;
+import com.example.ExamManagmentSystem.dto.NewTicketDto;
 import com.example.ExamManagmentSystem.dto.RegionTicketDto;
-import com.example.ExamManagmentSystem.dto.dtomapper.MapTo;
 import com.example.ExamManagmentSystem.entity.Region;
 import com.example.ExamManagmentSystem.entity.Exam;
 import com.example.ExamManagmentSystem.entity.Center;
 import com.example.ExamManagmentSystem.entity.Ticket;
+import com.example.ExamManagmentSystem.mapper.TicketMapper;
 import com.example.ExamManagmentSystem.repository.CenterRepository;
 import com.example.ExamManagmentSystem.repository.ExamRepository;
 import com.example.ExamManagmentSystem.repository.RegionRepository;
 import com.example.ExamManagmentSystem.repository.TicketRepository;
 import com.example.ExamManagmentSystem.service.auth.jwt.JsonWebTokenService;
 import com.example.ExamManagmentSystem.utils.UtisGenerator;
+import com.example.ExamManagmentSystem.validator.DtoValidator;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +31,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
     private final ExamRepository examRepository;
     private final RegionRepository regionRepository;
@@ -33,29 +39,23 @@ public class TicketServiceImpl implements TicketService {
     private final CenterRepository centerRepository;
     private final JsonWebTokenService jsonWebTokenService;
     private final UtisGenerator utisGenerator;
-    private final MapTo mapTo;
-    public TicketServiceImpl(ExamRepository examRepository, RegionRepository regionRepository, TicketRepository ticketRepository, CenterRepository centerRepository, JsonWebTokenService jsonWebTokenService, UtisGenerator utisGenerator, MapTo mapTo){
-        this.examRepository = examRepository;
-        this.ticketRepository = ticketRepository;
-        this.regionRepository = regionRepository;
-        this.centerRepository = centerRepository;
-        this.jsonWebTokenService = jsonWebTokenService;
-        this.utisGenerator = utisGenerator;
-        this.mapTo = mapTo;
-    }
-    public ResponseEntity<Ticket> saveTicket(HttpServletRequest request, Ticket newTicket){
+    private final DtoValidator dtoValidator;
+    @Override
+    public Ticket saveTicket(HttpServletRequest request,@Valid @NotNull NewTicketDto newTicket){
         Long regionId = jsonWebTokenService.getUserIdFromToken(request,"tokenR");
+        dtoValidator.validateDto(newTicket);
         Region exsistingRegion = regionRepository.findById(regionId)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not region with this id:"+regionId));
-        Long examId = newTicket.getExam().getId();
+        Long examId = newTicket.getExam();
         Exam exsistingExam = examRepository.findById(examId)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not exam with this id:"+examId));
-        Long centerId = newTicket.getCenter().getId();
+        Long centerId = newTicket.getCenter();
         Center exsistingCenter = centerRepository.findById(centerId)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not center with this id:"+centerId));
-        newTicket.setRegion(exsistingRegion);
-        newTicket.setExam(exsistingExam);
-        newTicket.setCenter(exsistingCenter);
+        Ticket newTicketInstance = new Ticket();
+        newTicketInstance.setRegion(exsistingRegion);
+        newTicketInstance.setExam(exsistingExam);
+        newTicketInstance.setCenter(exsistingCenter);
         if(!Objects.equals(exsistingCenter.getRegion().getId(), regionId)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Your region is not same with region of this center");
 
@@ -64,13 +64,17 @@ public class TicketServiceImpl implements TicketService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"region creator is not same with exam creator");
 
         }
-        if(newTicket.getClas()==null || newTicket.getClas().isEmpty() || newTicket.getSector()==null || newTicket.getSector().isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"class,sector is required");
-        }
+        newTicketInstance.setClas(newTicket.getClas());
+        newTicketInstance.setSector(newTicket.getSector());
+        newTicketInstance.setName(newTicket.getName());
+        newTicketInstance.setSurname(newTicket.getSurname());
+        newTicketInstance.setFather(newTicket.getFather());
+        newTicketInstance.setRoom(newTicket.getRoom());
+        newTicketInstance.setPlace(newTicket.getPlace());
+        newTicketInstance.setPhone(newTicket.getPhone());
         String uniqueUtis = utisGenerator.generateUniqueUtis(request);
-        newTicket.setUtis(uniqueUtis);
-        Ticket savedTicket = ticketRepository.save(newTicket);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedTicket);
+        newTicketInstance.setUtis(uniqueUtis);
+        return ticketRepository.save(newTicketInstance);
     }
 
     @Override
@@ -79,7 +83,7 @@ public class TicketServiceImpl implements TicketService {
         Region exsistingRegion = regionRepository.findById(regionid)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not region with this id:"+regionid));
         List<Ticket> filteredtickets = this.filterTickets(exsistingRegion,pageNumber,pageSize,clas,fenn,examId);
-        List<RegionTicketDto> allRegionTickets = mapTo.regionTicketDto(filteredtickets);
+        List<RegionTicketDto> allRegionTickets = TicketMapper.INSTANCE.ticketsToRegionTicketDtos(filteredtickets);
         return allRegionTickets;
     }
     @Override
@@ -87,7 +91,7 @@ public class TicketServiceImpl implements TicketService {
         Long userid = jsonWebTokenService.getUserIdFromToken(request,"tokenU");
 //        List<Ticket> tickets = ticketRepository.findAll().stream().filter(ticket -> Objects.equals(ticket.getRegion().getCreator().getId(), userid)).toList();
         List<Ticket> tickets = ticketRepository.findByRegion_Creator_Id(userid);
-        List<RegionTicketDto> allUserTickets = mapTo.regionTicketDto(tickets);
+        List<RegionTicketDto> allUserTickets = TicketMapper.INSTANCE.ticketsToRegionTicketDtos(tickets);
         return allUserTickets;
     }
 

@@ -10,7 +10,7 @@ import java.util.Date;
 
 @Entity
 @Data
-public class Center {
+public class Center extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -20,15 +20,6 @@ public class Center {
     private String city;
     @Column(nullable = false)
     private String code;
-    @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false, updatable = false)
-    private Date createdAt;
-
-    @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false)
-    private Date updatedAt;
     @ManyToOne
     @JoinColumn(name="region_id",nullable = false)
     @JsonIgnore

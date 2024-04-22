@@ -65,7 +65,7 @@ public class JsonWebTokenService {
         return userId;
     }
 
-    public HttpHeaders sendTokenWithCookie(Long id,String tokenName, HttpServletResponse response){
+    public void sendTokenWithCookie(Long id,String tokenName, HttpServletResponse response){
         String token = this.generateToken(id);
         Cookie cookie = new Cookie(tokenName, token);
         cookie.setMaxAge(this.getJwtExpiration());
@@ -73,12 +73,9 @@ public class JsonWebTokenService {
         cookie.setPath("/");
         cookie.setSecure(true);
         response.addCookie(cookie);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
-        return headers;
     }
 
-    public ResponseEntity<String> clearCookie(HttpServletRequest request,HttpServletResponse response,String tokenName){
+    public String clearCookie(HttpServletRequest request,HttpServletResponse response,String tokenName){
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -88,7 +85,7 @@ public class JsonWebTokenService {
                     cookie.setHttpOnly(true);
                     cookie.setSecure(true);
                     response.addCookie(cookie);
-                    return ResponseEntity.status(HttpStatus.ACCEPTED).body("Logged out successfully");
+                    return "Logged out successfully";
                 }
             }
         }

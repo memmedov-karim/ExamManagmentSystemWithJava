@@ -12,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Data
-public class Region {
+public class Region extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -27,14 +27,6 @@ public class Region {
     public void generatePassword() {
         this.password = PasswordGenerator.generateRandomPassword(8);
     }
-    @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false, updatable = false)
-    private Date createdAt;
-    @UpdateTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false)
-    private Date updatedAt;
     @ManyToOne
     @JoinColumn(name = "creator_id", nullable = false)
     @JsonIgnore

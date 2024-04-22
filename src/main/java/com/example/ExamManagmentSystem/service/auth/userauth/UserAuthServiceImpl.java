@@ -7,22 +7,20 @@ import com.example.ExamManagmentSystem.service.auth.jwt.JsonWebTokenService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 @Service
+@RequiredArgsConstructor
 public class UserAuthServiceImpl implements UserAuthService {
     private final UserRepository userRepository;
     private final JsonWebTokenService jsonWebTokenService;
-    public UserAuthServiceImpl(UserRepository userRepository, JsonWebTokenService jsonWebTokenService) {
-        this.userRepository = userRepository;
-        this.jsonWebTokenService = jsonWebTokenService;
-    }
 
     @Override
-    public ResponseEntity<String> loginUser(UserLoginDto userLoginDto, HttpServletResponse response){
+    public String loginUser(UserLoginDto userLoginDto, HttpServletResponse response){
         String email = userLoginDto.getEmail();
         String password = userLoginDto.getPassword();
         if(email==null || email.isEmpty() || password==null || password.isEmpty()){
@@ -37,11 +35,11 @@ public class UserAuthServiceImpl implements UserAuthService {
         if(!password.equals(userCorrectPassword)){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"password is not correct");
         }
-        HttpHeaders headers = jsonWebTokenService.sendTokenWithCookie(exsistingUser.getId(), "tokenU",response);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).headers(headers).body("Succes login");
+        jsonWebTokenService.sendTokenWithCookie(exsistingUser.getId(), "tokenU",response);
+        return "Succes login";
     }
     @Override
-    public ResponseEntity<String> logoutUser(HttpServletRequest request, HttpServletResponse response) {
+    public String logoutUser(HttpServletRequest request, HttpServletResponse response) {
         return(jsonWebTokenService.clearCookie(request,response,"tokenU"));
     }
 }

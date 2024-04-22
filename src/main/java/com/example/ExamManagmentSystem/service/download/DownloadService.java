@@ -10,5 +10,5 @@ import java.io.IOException;
 import java.util.List;
 
 public interface DownloadService {
-    public ResponseEntity<InputStreamResource> downloadRegionTicketsAsCSV(HttpServletRequest request) throws IOException;
+    public InputStreamResource downloadRegionTicketsAsCSV(HttpServletRequest request) throws IOException;
 }

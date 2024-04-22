@@ -1,0 +1,12 @@
+1.Servis layerdə Response entity return etmişəm,orda data return etmək lazımdır və
+Response entity -ni controllerdə return etməliyəm.(Hell oldu)
+3.Repository interface-lərdə Repository annotation əlavə etmək.(Hell oldu)
+6.Dependency injection üçün RequiredArgsCostructor annotation istifadə elə.(Hell oldu)
+7.Mapper üçün yeni mapper package yarat və MapStructer istifadə etmək.(Hell oldu)
+5.Entity-lərdə təkrar istifadə olunan fieldləri abstract baseEntity clası yaradıb və onu
+digər entitlərə extend etmək.(Hell oldu)
+9.RequestMapping istifadə etmək.(Hell oldu)
+4.Validation üçün Hibernate validator istifadə etmək.(Hell oldu)
+--------------------------------------------------------------
+2.Bir exceptions package yaratmalıyam və mümkün bütün exceptionları orda qeyd etməliyəm.
+8.Lombok bilder istifadə etmək.

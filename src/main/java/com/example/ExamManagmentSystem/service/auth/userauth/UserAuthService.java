@@ -7,6 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 
 public interface UserAuthService {
-    public ResponseEntity<String> loginUser(UserLoginDto userLoginDto, HttpServletResponse response);
-    public ResponseEntity<String> logoutUser(HttpServletRequest request, HttpServletResponse response);
+    public String loginUser(UserLoginDto userLoginDto, HttpServletResponse response);
+    public String logoutUser(HttpServletRequest request, HttpServletResponse response);
 }

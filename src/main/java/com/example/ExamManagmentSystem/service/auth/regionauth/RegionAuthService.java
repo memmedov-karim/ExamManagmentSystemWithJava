@@ -7,6 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 
 public interface RegionAuthService {
-    public ResponseEntity<String> loginRegion(RegionLoginDto regionLoginDto, HttpServletResponse response);
-    public ResponseEntity<String> logoutRegion(HttpServletRequest request, HttpServletResponse response);
+    public String loginRegion(RegionLoginDto regionLoginDto, HttpServletResponse response);
+    public String logoutRegion(HttpServletRequest request, HttpServletResponse response);
 }
