@@ -2,6 +2,8 @@ package com.example.ExamManagmentSystem.service.download;
 
 import com.example.ExamManagmentSystem.entity.Exam;
 import com.example.ExamManagmentSystem.entity.Region;
+import com.example.ExamManagmentSystem.exceptions.FileGenerationException;
+import com.example.ExamManagmentSystem.exceptions.NotFoundException;
 import com.example.ExamManagmentSystem.repository.RegionRepository;
 import com.example.ExamManagmentSystem.repository.TicketRepository;
 import com.example.ExamManagmentSystem.dto.RegionTicketDto;
@@ -41,7 +43,7 @@ public class DownloadServiceImpl implements DownloadService {
     public InputStreamResource downloadRegionTicketsAsCSV(HttpServletRequest request) {
         Long regionId = jsonWebTokenService.getUserIdFromToken(request,"tokenR");
         Region existingRegion = regionRepository.findById(regionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no region with this id:" + regionId));
+                .orElseThrow(() -> new NotFoundException("There is no region with this id:" + regionId));
 
         Pageable pageable = PageRequest.of(0, 100000);
         List<RegionTicketDto> regionTickets = ticketService.getTicketsOfRegion(request,0,10000,null,null,null);
@@ -82,7 +84,7 @@ public class DownloadServiceImpl implements DownloadService {
             // Return the CSV content as InputStreamResource
             return new InputStreamResource(new ByteArrayInputStream(outputStream.toByteArray()));
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create CSV file", e);
+            throw new FileGenerationException("Failed to create CSV file", e);
         }
     }
 }

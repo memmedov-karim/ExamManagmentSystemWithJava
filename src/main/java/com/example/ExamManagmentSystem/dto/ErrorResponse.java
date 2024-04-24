@@ -1,22 +1,16 @@
 package com.example.ExamManagmentSystem.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+@Getter
+@Setter
 public class ErrorResponse {
-    private int statuscode;
-    private String errormessage;
-    public ErrorResponse(int statuscode,String errormessage){
-        this.statuscode = statuscode;
-        this.errormessage = errormessage;
-    }
-    public int getStatuscode(){
-        return this.statuscode;
-    }
-    public void setStatuscode(int statuscode){
-        this.statuscode = statuscode;
-    }
-    public String getErrormessage(){
-        return this.errormessage;
-    }
-    public void setErrormessage(String errormessage){
-        this.errormessage = errormessage;
+    private String message;
+    private int status;
+    private LocalDateTime timestamp;
+    public String getTimestamp() {
+        return timestamp.toString();
     }
 }

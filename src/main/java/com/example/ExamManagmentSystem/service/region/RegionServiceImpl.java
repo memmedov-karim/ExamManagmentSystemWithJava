@@ -4,6 +4,9 @@ import com.example.ExamManagmentSystem.dto.NewRegionDto;
 import com.example.ExamManagmentSystem.dto.NewTicketDto;
 import com.example.ExamManagmentSystem.entity.Region;
 import com.example.ExamManagmentSystem.entity.User;
+import com.example.ExamManagmentSystem.exceptions.AlreadyExistsException;
+import com.example.ExamManagmentSystem.exceptions.NotFoundException;
+import com.example.ExamManagmentSystem.exceptions.ProcessNotAllowedException;
 import com.example.ExamManagmentSystem.repository.RegionRepository;
 import com.example.ExamManagmentSystem.repository.UserRepository;
 import com.example.ExamManagmentSystem.service.auth.jwt.JsonWebTokenService;
@@ -35,9 +38,9 @@ public class RegionServiceImpl implements RegionService {
         Long userid = jsonWebTokenService.getUserIdFromToken(request,"tokenU");
         dtoValidator.validateDto(newRegion);
         User exsistingUser = userRepository.findById(userid)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no user with this id: " + userid));
+                .orElseThrow(() -> new NotFoundException("There is no user with this id: " + userid));
         if(regionRepository.existsByNameAndCreatorId(newRegion.getName(), userid)){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"This name: "+newRegion.getName()+" already used");
+            throw new AlreadyExistsException("This name: "+newRegion.getName()+" already exists");
         }
         Region newRegionInstance = new Region();
         newRegionInstance.setCreator(exsistingUser);
@@ -50,11 +53,11 @@ public class RegionServiceImpl implements RegionService {
     public Long deleteRegion(HttpServletRequest request,Long regionid){
         Long userid = jsonWebTokenService.getUserIdFromToken(request,"tokenU");
         User exsistingUser = userRepository.findById(userid)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not user with this id: "+userid));
+                .orElseThrow(()->new NotFoundException("There is not user with this id: "+userid));
         Region exsistingRegion = regionRepository.findById(regionid)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not region with this id: "+regionid));
+                .orElseThrow(()->new NotFoundException("There is not region with this id: "+regionid));
         if(!Objects.equals(exsistingRegion.getCreator().getId(), userid)){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"You can not delete this region");
+            throw new ProcessNotAllowedException("You can not delete this region");
         }
         regionRepository.deleteById(regionid);
         return regionid;
@@ -63,7 +66,7 @@ public class RegionServiceImpl implements RegionService {
     public List<Region> allUserRegions(HttpServletRequest request){
         Long userid = jsonWebTokenService.getUserIdFromToken(request,"tokenU");
         User exsistingUser = userRepository.findById(userid)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not user with this id: "+userid));
+                .orElseThrow(()->new NotFoundException("There is not user with this id: "+userid));
         return exsistingUser.getRegions();
     }
 }

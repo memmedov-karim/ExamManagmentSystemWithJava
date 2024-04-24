@@ -5,6 +5,8 @@ import com.example.ExamManagmentSystem.entity.Region;
 import com.example.ExamManagmentSystem.entity.Exam;
 import com.example.ExamManagmentSystem.entity.Center;
 import com.example.ExamManagmentSystem.entity.Ticket;
+import com.example.ExamManagmentSystem.exceptions.NotFoundException;
+import com.example.ExamManagmentSystem.exceptions.ProcessNotAllowedException;
 import com.example.ExamManagmentSystem.mapper.TicketMapper;
 import com.example.ExamManagmentSystem.repository.CenterRepository;
 import com.example.ExamManagmentSystem.repository.ExamRepository;
@@ -45,23 +47,23 @@ public class TicketServiceImpl implements TicketService {
         Long regionId = jsonWebTokenService.getUserIdFromToken(request,"tokenR");
         dtoValidator.validateDto(newTicket);
         Region exsistingRegion = regionRepository.findById(regionId)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not region with this id:"+regionId));
+                .orElseThrow(()->new NotFoundException("There is not region with this id:"+regionId));
         Long examId = newTicket.getExam();
         Exam exsistingExam = examRepository.findById(examId)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not exam with this id:"+examId));
+                .orElseThrow(()->new NotFoundException("There is not exam with this id:"+examId));
         Long centerId = newTicket.getCenter();
         Center exsistingCenter = centerRepository.findById(centerId)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not center with this id:"+centerId));
+                .orElseThrow(()->new NotFoundException("There is not center with this id:"+centerId));
         Ticket newTicketInstance = new Ticket();
         newTicketInstance.setRegion(exsistingRegion);
         newTicketInstance.setExam(exsistingExam);
         newTicketInstance.setCenter(exsistingCenter);
         if(!Objects.equals(exsistingCenter.getRegion().getId(), regionId)){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Your region is not same with region of this center");
+            throw new ProcessNotAllowedException("This process is not allowed for you");
 
         }
         if(!Objects.equals(exsistingRegion.getCreator().getId(), exsistingExam.getCreator().getId())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"region creator is not same with exam creator");
+            throw new ProcessNotAllowedException("This process is not allowed for you");
 
         }
         newTicketInstance.setClas(newTicket.getClas());
@@ -81,7 +83,7 @@ public class TicketServiceImpl implements TicketService {
     public List<RegionTicketDto> getTicketsOfRegion(HttpServletRequest request,int pageNumber,int pageSize,String clas,String fenn,Long examId){
         Long regionid = jsonWebTokenService.getUserIdFromToken(request,"tokenR");
         Region exsistingRegion = regionRepository.findById(regionid)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not region with this id:"+regionid));
+                .orElseThrow(()->new NotFoundException("There is not region with this id:"+regionid));
         List<Ticket> filteredtickets = this.filterTickets(exsistingRegion,pageNumber,pageSize,clas,fenn,examId);
         List<RegionTicketDto> allRegionTickets = TicketMapper.INSTANCE.ticketsToRegionTicketDtos(filteredtickets);
         return allRegionTickets;

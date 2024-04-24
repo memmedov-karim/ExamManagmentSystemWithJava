@@ -2,6 +2,8 @@ package com.example.ExamManagmentSystem.service.user;
 
 import com.example.ExamManagmentSystem.dto.UserRegisterDto;
 import com.example.ExamManagmentSystem.entity.User;
+import com.example.ExamManagmentSystem.exceptions.AlreadyExistsException;
+import com.example.ExamManagmentSystem.exceptions.NotFoundException;
 import com.example.ExamManagmentSystem.repository.UserRepository;
 import com.example.ExamManagmentSystem.validator.DtoValidator;
 import com.example.ExamManagmentSystem.validator.UserValidator;
@@ -31,7 +33,7 @@ public class UserServiceImpl implements UserService {
     public User saveUser(@Valid @NotNull UserRegisterDto newUser) {
         dtoValidator.validateDto(newUser);
         if (userRepository.existsUserByEmail(newUser.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User already exists with this email: " + newUser.getEmail());
+            throw new AlreadyExistsException("User already exists with this email: " + newUser.getEmail());
         }
         User nuser = new User();
         nuser.setName(newUser.getName());
@@ -52,7 +54,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Long deleteUser(Long id){
         if(!userRepository.existsById(id)){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"There is not user with this id: "+id);
+            throw new NotFoundException("There is not user with this id: "+id);
         }
         userRepository.deleteById(id);
         return id;
@@ -61,12 +63,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUser(Long id,User newUser){
         User exsistingUser = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no user with this id: " + id));
+                .orElseThrow(() -> new NotFoundException("There is no user with this id: " + id));
 
 //        userValidator.validate(newUser);
         if(!exsistingUser.getName().equals(newUser.getName())){
             if(userRepository.existsUserByName(newUser.getName())){
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"User already exsist with this name: "+newUser.getName());
+                throw new AlreadyExistsException("User already exsist with this name: "+newUser.getName());
             }
         }
         exsistingUser.setName((newUser.getName()==null || newUser.getName().isEmpty()) ? exsistingUser.getName():newUser.getName());

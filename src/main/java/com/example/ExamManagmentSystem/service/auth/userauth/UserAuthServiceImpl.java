@@ -2,8 +2,11 @@ package com.example.ExamManagmentSystem.service.auth.userauth;
 
 import com.example.ExamManagmentSystem.dto.UserLoginDto;
 import com.example.ExamManagmentSystem.entity.User;
+import com.example.ExamManagmentSystem.exceptions.NotFoundException;
+import com.example.ExamManagmentSystem.exceptions.PasswordNotCorrectException;
 import com.example.ExamManagmentSystem.repository.UserRepository;
 import com.example.ExamManagmentSystem.service.auth.jwt.JsonWebTokenService;
+import com.example.ExamManagmentSystem.validator.DtoValidator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,22 +21,20 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserAuthServiceImpl implements UserAuthService {
     private final UserRepository userRepository;
     private final JsonWebTokenService jsonWebTokenService;
-
+    private final DtoValidator dtoValidator;
     @Override
     public String loginUser(UserLoginDto userLoginDto, HttpServletResponse response){
         String email = userLoginDto.getEmail();
         String password = userLoginDto.getPassword();
-        if(email==null || email.isEmpty() || password==null || password.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"email,password is required");
-        }
+        dtoValidator.validateDto(userLoginDto);
         boolean isexsistUser = userRepository.existsUserByEmail(email);
         if(!isexsistUser){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not user with this email:"+email);
+            throw new NotFoundException("There is not user with this email:"+email);
         }
         User exsistingUser = userRepository.findByEmail(email);
         String userCorrectPassword = exsistingUser.getPassword();
         if(!password.equals(userCorrectPassword)){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"password is not correct");
+            throw new PasswordNotCorrectException("password is not correct");
         }
         jsonWebTokenService.sendTokenWithCookie(exsistingUser.getId(), "tokenU",response);
         return "Succes login";

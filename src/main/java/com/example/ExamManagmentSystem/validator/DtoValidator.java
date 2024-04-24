@@ -1,6 +1,7 @@
 package com.example.ExamManagmentSystem.validator;
 
 import com.example.ExamManagmentSystem.dto.UserRegisterDto;
+import com.example.ExamManagmentSystem.exceptions.HibernateValidationException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
@@ -22,7 +23,7 @@ public class DtoValidator {
             for (ConstraintViolation<T> violation : violations) {
                 errorMessages.add(violation.getMessage());
             }
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation failed: " + errorMessages);
+            throw new HibernateValidationException("Validation failed: " + String.join(", ", errorMessages));
         }
     }
 }

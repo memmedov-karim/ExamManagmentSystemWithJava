@@ -1,5 +1,7 @@
 package com.example.ExamManagmentSystem.service.auth.jwt;
 
+import com.example.ExamManagmentSystem.exceptions.CookiesNotFoundInRequestException;
+import com.example.ExamManagmentSystem.exceptions.TokenNotFoundInCookiesException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -47,11 +49,11 @@ public class JsonWebTokenService {
                     .filter(cookie -> cookie.getName().equals(tokenName))
                     .map(Cookie::getValue)
                     .findFirst()
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT token not found in cookie"));
+                    .orElseThrow(() -> new TokenNotFoundInCookiesException("Json web token not found in cookie"));
             Long userId = this.parseTokenAndGetUserId(token);
             return userId;
         } else {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No cookies found in the request");
+            throw new CookiesNotFoundInRequestException("No cookies found in the request");
         }
     }
 
@@ -89,6 +91,6 @@ public class JsonWebTokenService {
                 }
             }
         }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Token cookie not found");
+        throw new CookiesNotFoundInRequestException("Cookie not found");
     }
 }

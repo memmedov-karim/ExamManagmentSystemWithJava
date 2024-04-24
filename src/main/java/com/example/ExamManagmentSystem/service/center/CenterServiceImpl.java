@@ -3,6 +3,9 @@ package com.example.ExamManagmentSystem.service.center;
 import com.example.ExamManagmentSystem.dto.NewCenterDto;
 import com.example.ExamManagmentSystem.entity.Center;
 import com.example.ExamManagmentSystem.entity.Region;
+import com.example.ExamManagmentSystem.exceptions.AlreadyExistsException;
+import com.example.ExamManagmentSystem.exceptions.NotFoundException;
+import com.example.ExamManagmentSystem.exceptions.ProcessNotAllowedException;
 import com.example.ExamManagmentSystem.repository.CenterRepository;
 import com.example.ExamManagmentSystem.repository.RegionRepository;
 import com.example.ExamManagmentSystem.service.auth.jwt.JsonWebTokenService;
@@ -35,10 +38,10 @@ public class CenterServiceImpl implements CenterService {
         Long regionid = jsonWebTokenService.getUserIdFromToken(request,"tokenR");
         dtoValidator.validateDto(newCenter);
         Region exsistingRegion = regionRepository.findById(regionid)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not region with this id: "+regionid));
+                .orElseThrow(()->new NotFoundException("There is not region with this id: "+regionid));
 //        System.out.println(newCenter.getName()+":"+newCenter.getCity()+":"+newCenter.getCode());
         if(centerRepository.existsByNameAndRegionId(newCenter.getName(), regionid)){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"This name: "+newCenter.getName()+" already exsist");
+            throw new AlreadyExistsException("This name: "+newCenter.getName()+" already exist");
         }
         Center newCenterInstance = new Center();
         newCenterInstance.setRegion(exsistingRegion);
@@ -52,11 +55,11 @@ public class CenterServiceImpl implements CenterService {
     public Long deleteCenter(HttpServletRequest request,Long centerId){
         Long regionId = jsonWebTokenService.getUserIdFromToken(request,"tokenR");
         Region exsistingRegion = regionRepository.findById(regionId)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not region with this id:"+regionId));
+                .orElseThrow(()->new NotFoundException("There is not region with this id:"+regionId));
         Center exsistingCenter = centerRepository.findById(centerId)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not center with this id:"+centerId));
+                .orElseThrow(()->new NotFoundException("There is not center with this id:"+centerId));
         if(!Objects.equals(exsistingCenter.getRegion().getId(), regionId)){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"You can not delete this center");
+            throw new ProcessNotAllowedException("You can not delete this center");
         }
         centerRepository.deleteById(centerId);
         return exsistingCenter.getId();

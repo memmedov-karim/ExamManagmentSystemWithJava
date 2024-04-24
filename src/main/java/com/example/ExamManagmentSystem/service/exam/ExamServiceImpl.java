@@ -3,6 +3,8 @@ import com.example.ExamManagmentSystem.dto.NewExamDto;
 import com.example.ExamManagmentSystem.entity.Region;
 import com.example.ExamManagmentSystem.entity.User;
 import com.example.ExamManagmentSystem.entity.Exam;
+import com.example.ExamManagmentSystem.exceptions.AlreadyExistsException;
+import com.example.ExamManagmentSystem.exceptions.NotFoundException;
 import com.example.ExamManagmentSystem.repository.ExamRepository;
 import com.example.ExamManagmentSystem.repository.RegionRepository;
 import com.example.ExamManagmentSystem.repository.UserRepository;
@@ -35,9 +37,9 @@ public class ExamServiceImpl implements ExamService{
         Long userid = jsonWebTokenService.getUserIdFromToken(request,"tokenU");
         dtoValidator.validateDto(newExam);
         User exsistingUser = userRepository.findById(userid)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not user with this id: "+userid));
+                .orElseThrow(()->new NotFoundException("There is not user with this id: "+userid));
         if(examRepository.existsByNameAndCreatorId(newExam.getName(),userid)){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"This name: "+newExam.getName()+" already used");
+            throw new AlreadyExistsException("This name: "+newExam.getName()+" already exist");
         }
         Exam newExamInstance = new Exam();
         newExamInstance.setCreator(exsistingUser);
@@ -51,7 +53,7 @@ public class ExamServiceImpl implements ExamService{
     public List<Exam> allRegionExams(HttpServletRequest request){
         Long regionid = jsonWebTokenService.getUserIdFromToken(request,"tokenR");
         Region exsistingRegion = regionRepository.findById(regionid)
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"There is not region with this id: "+regionid));
+                .orElseThrow(()->new NotFoundException("There is not region with this id: "+regionid));
         List<Exam> regionsexams = exsistingRegion.getCreator().getExams();
         return regionsexams;
     }
